@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from os import path, mkdir
+from os import path
 import sys
 import csv
 import json
 import re
 
-this_path = path.dirname(__file__)
-meta_path = path.join(this_path, '..', 'cbeta-metadata')
+meta_path = '../cbeta-metadata'
 cache = {}
 
 canon_names = {
@@ -58,7 +57,7 @@ def load_csv(filename):
 
 def save_csv(rows, filename):
     try:
-        with open(filename, 'w') as f:
+        with open(filename, 'w', encoding='utf-8') as f:
             c = csv.writer(f)
             c.writerows(rows)
             return True
@@ -80,7 +79,8 @@ def build_meta():
             path.join(meta_path, 'time', 'out', '%s.json' % canon_code), {})
         times, time = times.get(work_id, {}), ''
         dynasty = times.get('dynasty')
-        if dynasty and dynasty != author and (len(dynasty) < 4 or not re.search('[造糅譯集]$', dynasty)):
+        if dynasty and dynasty != author and (len(dynasty) < 3 or not re.search(
+                '[造糅譯集述釋頌著錄編圖註寫撰英]$|[(（]', dynasty)):
             if times.get('time_from'):
                 dynasty += '%s~%s' % (times['time_from'], times['time_to'])
             time = dynasty
@@ -94,9 +94,12 @@ def build_meta():
         vol_no = [m[1] for m in id_map if m[0] == work_id]
         assert vol_no
 
-        items.append([work_id, title, canon_names[canon_code], category,
-                      vol_no[0], extent + '卷', author, time])
-    save_csv(items, path.join(this_path, 'work.csv'))
+        items.append([work_id,
+                      re.sub(r'(——|（).+$', '', title),
+                      canon_names[canon_code], category,
+                      '..'.join([re.sub('^[A-Z]+0*', '', n) for n in vol_no[0].split('..')]),
+                      extent + '卷', author, time])
+    save_csv(items, 'work.csv')
 
 
 if __name__ == '__main__':
