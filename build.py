@@ -17,9 +17,9 @@ canon_names = {
     'D': '國圖',
     'F': '房山石經',
     'G': '佛教大藏經',
-    'GA': '志彙',
-    'GB': '志叢',
-    'I': '佛拓',
+    'GA': '佛寺志彙',
+    'GB': '佛寺志叢',
+    'I': '北朝佛拓',
     'J': '嘉興藏',
     'K': '高麗藏',
     'L': '乾隆藏',
@@ -31,7 +31,7 @@ canon_names = {
     'S': '宋藏遺珍',
     'T': '大正藏',
     'U': '洪武南藏',
-    'X': '卍續',
+    'X': '卍新續藏',
     'Y': '印順',
     'Z': '卍大日本續藏經',
     'ZS': '正史',
@@ -68,7 +68,7 @@ def save_csv(rows, filename):
 def build_meta():
     all_title_file = path.join(meta_path, 'titles', 'all-title-byline.csv')
     titles = load_csv(all_title_file)[1:]
-    items = ['经号,经名,所属藏经,部类,册别,卷数,作译者,时间'.split(',')]
+    items = ['经号,经名,所属藏经,部类,册别,卷数,字数,作译者,时间'.split(',')]
 
     for work_id, title, extent, author in titles:  # 典籍編號,典籍名稱,卷數,作譯者
         canon_code = re.search('^([A-Z]{1,2})', work_id).group()
@@ -81,17 +81,21 @@ def build_meta():
 
         times = cache[canon_code + '_time'] = cache.get(canon_code + '_time') or load_json(
             path.join(meta_path, 'time', 'out', '%s.json' % canon_code), {})
-        times, time = times.get(work_id, {}), ''
-        dynasty = times.get('dynasty')
-        if dynasty and dynasty != author and dynasty not in ['失譯', '日本'] and (len(dynasty) < 3 or not re.search(
-                '[造糅譯集述釋頌論說著錄編圖註寫撰譯作製本英薩詩]$|[(（]', dynasty)):
+        times, dynasty = times.get(work_id, {}), ''
+        dn = times.get('dynasty')
+        if dn and dn != author and dn not in ['失譯', '日本', '朝鮮'] and (
+                        len(dn) < 3 or not re.search('[造糅譯集述釋頌論說著錄編圖註寫撰譯作製本英薩詩]$|[(（]', dn)):
             if times.get('time_from'):
-                dynasty += '%s~%s' % (times['time_from'], times['time_to'])
-            time = dynasty
+                dn += '%s~%s' % (times['time_from'], times['time_to'])
+            dynasty = dn
 
         categories = cache[canon_code + '_category'] = cache.get(canon_code + '_category') or load_json(
             path.join(meta_path, 'category', 'work_categories.json'), {})
         category = categories.get(work_id, {}).get('category_names', '')
+
+        char_count = cache[canon_code + '_char_count'] = cache.get(canon_code + '_char_count') or load_csv(
+            path.join(meta_path, 'char-count', 'without-puncs', '%s.csv' % canon_code))
+        char_count = [m[1] for m in char_count if m[0] == work_id]
 
         id_map = cache[canon_code + '_idmap'] = cache.get(canon_code + '_idmap') or load_csv(
             path.join(meta_path, 'work-id', '%s.csv' % canon_code))
@@ -107,7 +111,7 @@ def build_meta():
         items.append([work_id, title,
                       canon_names[canon_code], category,
                       '..'.join([re.sub('^[A-Z]+0*', '', n) for n in vol_no[0].split('..')]),
-                      extent, author, time])
+                      int(extent), char_count and int(char_count[0]) or 0, author, dynasty])
     save_csv(items, 'work.csv')
 
 
