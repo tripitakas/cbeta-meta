@@ -75,11 +75,15 @@ def build_meta():
         if canon_code not in canon_names and len(canon_code) > 1:
             canon_code = canon_code[:-1]
 
+        title = re.sub(r'(——|（).+$', '', title)
+        if len(title) > 30:
+            continue
+
         times = cache[canon_code + '_time'] = cache.get(canon_code + '_time') or load_json(
             path.join(meta_path, 'time', 'out', '%s.json' % canon_code), {})
         times, time = times.get(work_id, {}), ''
         dynasty = times.get('dynasty')
-        if dynasty and dynasty != author and (len(dynasty) < 3 or not re.search(
+        if dynasty and dynasty != author and dynasty not in ['失譯', '日本'] and (len(dynasty) < 3 or not re.search(
                 '[造糅譯集述釋頌論說著錄編圖註寫撰譯作製本英薩詩]$|[(（]', dynasty)):
             if times.get('time_from'):
                 dynasty += '%s~%s' % (times['time_from'], times['time_to'])
@@ -100,11 +104,10 @@ def build_meta():
             author = '．'.join(m.split('．')[:3]) + ' 等' + m[-1]
         author = '\u3000'.join(re.sub('（.+）$', '', author).split('\u3000')[:4])
 
-        title = re.sub(r'(——|（).+$', '', title)
         items.append([work_id, title,
                       canon_names[canon_code], category,
                       '..'.join([re.sub('^[A-Z]+0*', '', n) for n in vol_no[0].split('..')]),
-                      extent + '卷', author, time])
+                      extent, author, time])
     save_csv(items, 'work.csv')
 
 
