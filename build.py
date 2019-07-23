@@ -10,6 +10,7 @@ import re
 meta_path = '../cbeta-metadata'
 cache = {}
 
+# CBETA藏经代码
 canon_names = {
     'A': '趙城金藏',
     'B': '補編',
@@ -57,7 +58,7 @@ def load_csv(filename):
 
 def save_csv(rows, filename):
     try:
-        with open(filename, 'w', encoding='utf-8') as f:
+        with open(filename, 'w') as f:
             c = csv.writer(f)
             c.writerows(rows)
             return True
@@ -70,17 +71,20 @@ def build_meta():
     titles = load_csv(all_title_file)[1:]
     items = ['经号,经名,所属藏经,部类,册别,卷数,字数,作译者,时间'.split(',')]
 
+    # work_id: 从XML文件名提取的典籍編號，例如从 GA009n0008 取首末部分得到 GA0008
+    # see get_work_id_from_file_basename in https://github.com/RayCHOU/ruby-cbeta/blob/master/lib/cbeta.rb
     for work_id, title, extent, author in titles:  # 典籍編號,典籍名稱,卷數,作譯者
-        canon_code = re.search('^([A-Z]{1,2})', work_id).group()
+        canon_code = re.search('^([A-Z]{1,2})', work_id).group()  # 藏经编码，一或二个大写字母
         if canon_code not in canon_names and len(canon_code) > 1:
-            canon_code = canon_code[:-1]
+            canon_code = canon_code[:-1]  # 例如 J01nA042->JA->J
 
         title = re.sub(r'(——|（).+$', '', title)
         if len(title) > 30:
             continue
 
         times = cache[canon_code + '_time'] = cache.get(canon_code + '_time') or load_json(
-            path.join(meta_path, 'time', 'out', '%s.json' % canon_code), {})
+            path.join(meta_path, 'time', 'out', '%s.json' % canon_code))
+        assert times
         times, dynasty = times.get(work_id, {}), ''
         dn = times.get('dynasty')
         if dn and dn != author and dn not in ['失譯', '日本', '朝鮮'] and (
@@ -90,12 +94,16 @@ def build_meta():
             dynasty = dn
 
         categories = cache[canon_code + '_category'] = cache.get(canon_code + '_category') or load_json(
-            path.join(meta_path, 'category', 'work_categories.json'), {})
+            path.join(meta_path, 'category', 'work_categories.json'))
+        assert categories
         category = categories.get(work_id, {}).get('category_names', '')
 
         char_count = cache[canon_code + '_char_count'] = cache.get(canon_code + '_char_count') or load_csv(
             path.join(meta_path, 'char-count', 'without-puncs', '%s.csv' % canon_code))
-        char_count = [m[1] for m in char_count if m[0] == work_id]
+        char_count2 = cache[canon_code + '_char_count2'] = cache.get(canon_code + '_char_count2') or load_csv(
+            path.join(meta_path, 'char-count', 'without-puncs', '_%s.csv' % canon_code)) or []
+        assert char_count
+        char_count = [m[1] for m in char_count if m[0] == work_id] + [m[1] for m in char_count2 if m[0] == work_id]
 
         id_map = cache[canon_code + '_idmap'] = cache.get(canon_code + '_idmap') or load_csv(
             path.join(meta_path, 'work-id', '%s.csv' % canon_code))
@@ -110,7 +118,7 @@ def build_meta():
 
         items.append([work_id, title,
                       canon_names[canon_code], category,
-                      '..'.join([re.sub('^[A-Z]+0*', '', n) for n in vol_no[0].split('..')]),
+                      '..'.join([re.sub('^[A-Z]+', '', n) for n in vol_no[0].split('..')]),
                       int(extent), char_count and int(char_count[0]) or 0, author, dynasty])
     save_csv(items, 'work.csv')
 
