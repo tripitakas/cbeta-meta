@@ -4,18 +4,18 @@
 import os
 import re
 import json
-from glob import glob
+from glob2 import glob
 import os.path as path
 from lxml import etree
 
 XML_P5_DIR = '/Users/xiandu/Develop/xml-p5'
-MULU_DIR = '/Users/xiandu/Develop/mulu'
-JUAN_DIR = '/Users/xiandu/Develop/juan'
+MULU_DIR = '/Users/xiandu/Develop/cbeta-mulu'
+JUAN_DIR = '/Users/xiandu/Develop/cbeta-juan'
 
 
 def extract_mulu_from_xml_p5():
     """ 从CBETA xml-p5中提取目录信息 """
-    for fn in glob(path.join(XML_P5_DIR, '*.xml')):
+    for fn in glob(path.join(XML_P5_DIR, '**', '*.xml')):
         print('processing ' + fn)
         root = etree.parse(fn)
         namespaces = {'cb': 'http://www.cbeta.org/ns/1.0'}
@@ -48,11 +48,12 @@ def extract_mulu_from_xml_p5():
                 json.dump(mulu, fp, ensure_ascii=False)
             else:
                 fp.write('')
+    print('finished!')
 
 
 def extract_juan_from_xml_p5():
     """ 从CBETA xml-p5中提取卷信息 """
-    for fn in glob(path.join(XML_P5_DIR, '*.xml')):
+    for fn in glob(path.join(XML_P5_DIR, '**', '*.xml')):
         print('processing ' + fn)
         root = etree.parse(fn)
         namespaces = {'cb': 'http://www.cbeta.org/ns/1.0'}
@@ -81,6 +82,7 @@ def extract_juan_from_xml_p5():
                 json.dump(juan, fp, ensure_ascii=False)
             else:
                 fp.write('')
+    print('finished!')
 
 
 if __name__ == '__main__':
