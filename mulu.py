@@ -8,9 +8,9 @@ from glob import glob
 import os.path as path
 from lxml import etree
 
-XML_P5_DIR = '/Users/xiandu/Develop/test'
-Mulu_DIR = '/Users/xiandu/Develop/mulu'
-Juan_DIR = '/Users/xiandu/Develop/juan'
+XML_P5_DIR = '/Users/xiandu/Develop/xml-p5'
+MULU_DIR = '/Users/xiandu/Develop/mulu'
+JUAN_DIR = '/Users/xiandu/Develop/juan'
 
 
 def extract_mulu_from_xml_p5():
@@ -40,7 +40,7 @@ def extract_mulu_from_xml_p5():
         # 写文件
         head = re.search(r'^([A-Z]{1,2})(\d+)n(.*)', path.basename(fn))
         assert head and head.group()
-        to_dir = path.join(Mulu_DIR, head.group(1), head.group(1) + head.group(2))
+        to_dir = path.join(MULU_DIR, head.group(1), head.group(1) + head.group(2))
         if not path.exists(to_dir):
             os.makedirs(to_dir)
         with open(path.join(to_dir, path.splitext(path.basename(fn))[0] + '.json'), 'w') as fp:
@@ -73,7 +73,7 @@ def extract_juan_from_xml_p5():
         # 写文件
         head = re.search(r'^([A-Z]{1,2})(\d+)n(.*)', path.basename(fn))
         assert head and head.group()
-        to_dir = path.join(Juan_DIR, head.group(1), head.group(1) + head.group(2))
+        to_dir = path.join(JUAN_DIR, head.group(1), head.group(1) + head.group(2))
         if not path.exists(to_dir):
             os.makedirs(to_dir)
         with open(path.join(to_dir, path.splitext(path.basename(fn))[0] + '.json'), 'w') as fp:
