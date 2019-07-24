@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from os import path
 import sys
 import csv
 import json
 import re
+from os import path
+from datetime import  datetime
 
 meta_path = '../cbeta-metadata'
 cache = {}
@@ -123,5 +124,22 @@ def build_meta():
     save_csv(items, 'work.csv')
 
 
+def generate_js():
+    """ 生成meta信息的js文件 """
+    csv_reader = csv.reader(open('work.csv', encoding='utf-8'))
+    with open('cbeta-sutra.js', 'w', encoding='utf-8') as fp:
+        head = """/*
+* CBETA经目信息
+* 字段顺序依次是："经号", "经名", "所属藏经", "部类", "册别", "卷数", "字数", "作译者", "时间"
+* Date: %s
+*/
+
+var cbeta_sutras = """ % datetime.now().strftime('%Y-%m-%d %H:%M')
+        fp.write(head)
+        rows = [r for r in csv_reader]
+        fp.write(json.dumps(rows[1:], ensure_ascii=False))
+        fp.write(";")
+
+
 if __name__ == '__main__':
-    build_meta()
+    generate_js()
