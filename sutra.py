@@ -67,7 +67,8 @@ def save_csv(rows, filename):
         sys.stderr.write('Fail to save %s: %s\n' % (filename, str(e)))
 
 
-def build_meta():
+def build_sutra_meta():
+    """ 生成cbeta经目meta信息 """
     all_title_file = path.join(meta_path, 'titles', 'all-title-byline.csv')
     titles = load_csv(all_title_file)[1:]
     items = ['经号,经名,所属藏经,部类,册别,卷数,字数,作译者,时间'.split(',')]
