@@ -134,12 +134,12 @@ def get_juan(code, source_type="json"):
         filename = '%sn%s.xml' % (head.group(1) + head.group(2), head.group(3))
         xml_file = path.join(XML_P5_DIR, head.group(1), head.group(1) + head.group(2), filename)
         juan_list = get_juan_from_xml(xml_file)
-        pass
     else:
         filename = '%sn%s.json' % (head.group(1) + head.group(2), head.group(3))
         json_file = path.join(JUAN_DIR, head.group(1), head.group(1) + head.group(2), filename)
         with open(json_file, 'r') as fp:
             juan_list = json.load(fp)
+
     for i, juan in enumerate(juan_list):
         next = juan_list[i + 1]
         if cmp(juan['head'], code) <= 0 <= cmp(next['head'], code) and juan['n'] == next['n']:
