@@ -9,7 +9,7 @@ from glob2 import glob
 import os.path as path
 from lxml import etree
 
-XML_P5_DIR = '/Users/xiandu/Develop/xml-p5/T'
+XML_P5_DIR = '/Users/xiandu/Develop/xml-p5'
 MULU_DIR = '/Users/xiandu/Develop/cbeta-mulu'
 JUAN_DIR = '/Users/xiandu/Develop/cbeta-juan'
 
