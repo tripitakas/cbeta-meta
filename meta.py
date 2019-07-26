@@ -33,10 +33,7 @@ def extract_mulu_from_xml_p5(source=XML_P5_DIR, overwrite=False):
         mulu = get_mulu_from_xml(fn)
         print('[%s]%s: mulu file has been written.' % ((datetime.now().strftime('%Y-%m-%d %H:%M:%S')), path.basename(fn)))
         with open(to_file, 'w') as fp:
-            if mulu:
-                json.dump(mulu, fp, ensure_ascii=False)
-            else:
-                fp.write('')
+            json.dump(mulu, fp, ensure_ascii=False)
 
 
 def get_mulu_from_xml(fn):
@@ -90,10 +87,7 @@ def extract_juan_from_xml_p5(source=XML_P5_DIR, overwrite=False):
         juan = get_juan_from_xml(fn)
         print('[%s]%s: juan file has been written.' % ((datetime.now().strftime('%Y-%m-%d %H:%M:%S')), path.basename(fn)))
         with open(to_file, 'w') as fp:
-            if juan:
-                json.dump(juan, fp, ensure_ascii=False)
-            else:
-                fp.write('')
+            json.dump(juan, fp, ensure_ascii=False)
 
 
 def get_juan_from_xml(fn):
