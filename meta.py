@@ -106,10 +106,13 @@ def get_juan_from_xml(fn):
         lb_items = item.xpath('./preceding::*[@ed]')
         lb = lb_items[-1].xpath('@n') if lb_items else []
         head = '%s_p%s' % (path.basename(fn).split('.')[0], ','.join(lb))
+        title = item.xpath('./cb:jhead', namespaces=namespaces)
+        title = title and title[0].xpath('string(.)') or ''
         juan.append({
             'n': ','.join(item.xpath('@n')),
             'fun': ','.join(item.xpath('@fun')),
-            'head': head
+            'head': head,
+            'title': title
         })
     return juan
 
