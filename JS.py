@@ -19,41 +19,41 @@ sutras, last_code = {}, ''
 for i, r in enumerate(rows):
     if len(r) < 6:
         continue
-    name = re.search(r'^(.+?)（', r[1])  # 取（ 前的文字
-    if name:
-        name = name[1]
+    sutra_name = re.search(r'^(.+?)（', r[1])  # 取（ 前的文字
+    if sutra_name:
+        sutra_name = sutra_name[1]
     else:
-        name = re.search(r'^(.+?)[一二三四五六七八九十]+卷', r[1])  # 取多少卷之前的文字
-        if name:
-            name = name[1]
+        sutra_name = re.search(r'^(.+?)[一二三四五六七八九十]+卷', r[1])  # 取多少卷之前的文字
+        if sutra_name:
+            sutra_name = sutra_name[1]
     r[1] = re.sub(r'）.+$', '）', re.sub(r'卷\s*附', '卷', r[1]))  # 经名去掉末尾的说明
-    name = name or r[1]
-    r.append(name)  # 记下经名前缀
+    sutra_name = sutra_name or r[1]
+    r.append(sutra_name)  # 记下经名前缀
 
     last_code = r[0] = (' ' * 5 + (r[0] or last_code))[-6:]
-    name = r[0] + name
-    sutras[name] = sutras.get(name) or dict(code=r[0], items=[])
-    sutras[name]['items'].append(r)
+    sutra_name = r[0] + sutra_name
+    sutras[sutra_name] = sutras.get(sutra_name) or dict(code=r[0], items=[])
+    sutras[sutra_name]['items'].append(r)
 
 codes = set(sutra['code'] for name, sutra in sutras.items())
 
 for code in sorted(list(codes)):
-    for name, sutra in sutras.items():
+    for sutra_name, sutra in sutras.items():
         if sutra['code'] != code:
             continue
-        name = name.replace(code, '')
+        sutra_name = sutra_name.replace(code, '')
         if len(sutra['items']) > 1:
-            print('%s\t%s\t%s' % (code, name, '\t'.join([r[1].replace(name, '') for r in sutra['items']])))
+            print('%s\t%s\t%s' % (code, sutra_name, '\t'.join([r[1].replace(sutra_name, '') for r in sutra['items']])))
 
 for i, r in enumerate(rows):
     if len(r) < 7:
         continue
-    name, sutra = r[6], sutras[r[0] + r[6]]
+    sutra_name, sutra = r[6], sutras[r[0] + r[6]]
     item = dict(name=r[1])
     author = r
 
 sutras = sorted(list(sutras.items()), key=itemgetter(0))
-output_sutra = [['unified_sutra_code', 'sutra_code', 'name', 'due_reel_count', 'existed_reel_count',
+output_sutra = [['unified_sutra_code', 'sutra_code', 'sutra_name', 'due_reel_count', 'existed_reel_count',
                  'author', 'trans_time', 'start_volume', 'start_page', 'end_volume', 'end_page', 'remark']]
 nums = '○一二三四五六七八九十百上中下之'
 
@@ -85,13 +85,13 @@ for sutra in sutras:
         r[0] = r[0].replace(sutra['prefix'], '')
 
     sutra_code = 'JS%04d' % int(sutra['code'])
-    name = sutra['prefix']
+    sutra_name = sutra['prefix']
     reels, volumes, pages = [], [], []  # 卷，册，页
     translators = set()
 
     for i, r in enumerate(sutra['items']):
         m1 = re.search(r'（?卷[之]?([{0}]+)至卷[之]?([{0}]+)）?'.format(nums), r[0])
-        m2 = len(sutra['items']) == 1 and re.search(r'([{0}]+)卷'.format(nums), name)
+        m2 = len(sutra['items']) == 1 and re.search(r'([{0}]+)卷'.format(nums), sutra_name)
         m3 = m2 or re.search(r'存?([{0}]+)卷'.format(nums), r[0]) or re.search(r'存?卷([{0}]+)'.format(nums), r[0])
         if m1:
             a, b = text_to_num(m1.group(1)), text_to_num(m1.group(2))
@@ -103,7 +103,7 @@ for sutra in sutras:
             else:
                 reels.append(1 + i)
         elif r[0]:
-            if name == '云栖法汇':  # 11卷
+            if sutra_name == '云栖法汇':  # 11卷
                 reels.extend(range(1, 12))
             else:
                 reels.append(1 + i)
@@ -114,21 +114,21 @@ for sutra in sutras:
     assert len(set(volumes)) == len(volumes)
 
     if len(sutra['items']) > 1:
-        print('%s\t%s\t%d条\t%d卷\t%d册' % (sutra_code, name, len(sutra['items']), len(reels), len(volumes)))
+        print('%s\t%s\t%d条\t%d卷\t%d册' % (sutra_code, sutra_name, len(sutra['items']), len(reels), len(volumes)))
         for r in sutra['items']:
             print('\t%s\t%s\t%s册\tP%s' % (r[0], r[2], r[3], r[4]))  # 卷别,译者,册,起始页
 
     output_sutra.append([
         '',  # unified_sutra_code
         sutra_code,
-        name,
+        sutra_name,
         len(reels),  # due_reel_count
         len(reels),  # existed_reel_count
         list(translators)[0],  # author
         '',  # trans_time
-        volumes[0],  # start_volume
+        'JS_' + volumes[0],  # start_volume
         sutra['items'][0][4],  # start_page
-        volumes[-1],  # end_volume
+        'JS_' + volumes[-1],  # end_volume
         sutra['items'][-1][4],  # end_page
         '',  # remark
     ])
