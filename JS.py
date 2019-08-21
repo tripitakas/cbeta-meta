@@ -55,21 +55,24 @@ for i, r in enumerate(rows):
 sutras = sorted(list(sutras.items()), key=itemgetter(0))
 output_sutra = [['unified_sutra_code', 'sutra_code', 'name', 'due_reel_count', 'existed_reel_count',
                  'author', 'trans_time', 'start_volume', 'start_page', 'end_volume', 'end_page', 'remark']]
-nums = '○一二三四五六七八九十上中下之'
+nums = '○一二三四五六七八九十百上中下之'
 
 
 def text_to_num(text):
-    m = re.search(r'^[○一二三四五六七八九十]+', text)
+    m = re.search(r'^[○一二三四五六七八九十百]+', text)
     if m:
         num = 0
         for t in m.group():
             t = nums.index(t)
             if t == 10:
                 t = 0 if num else 10 if len(m.group()) == 1 else 1
+            elif t == 11:
+                num *= 100
+                continue
             num = num * 10 + t
         # print('%s: %d' % (m.group(), num))
         return num
-    t = re.sub('[一二三四五六七八九十○]([上中下之].*)?', '', text)
+    t = re.sub('[○一二三四五六七八九十百]([上中下之].*)?', '', text)
     return t
 
 
@@ -120,12 +123,12 @@ for sutra in sutras:
         sutra_code,
         name,
         len(reels),  # due_reel_count
-        0,  # existed_reel_count
+        len(reels),  # existed_reel_count
         list(translators)[0],  # author
         '',  # trans_time
-        reels[0],  # start_volume
+        volumes[0],  # start_volume
         sutra['items'][0][4],  # start_page
-        reels[-1],  # end_volume
+        volumes[-1],  # end_volume
         sutra['items'][-1][4],  # end_page
         '',  # remark
     ])
