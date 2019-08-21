@@ -8,6 +8,7 @@ from operator import itemgetter
 
 txt_file = path.join(path.dirname(__file__), 'JS.txt')
 csv_file = path.join(path.dirname(__file__), 'Sutra-JS.csv')
+volume_file = path.join(path.dirname(__file__), 'Volume-JS.csv')
 
 # txt的各列：编号	标题	译者全称	译者	册	起始頁
 # 1	六百卷	唐三藏法师玄奘奉诏译	玄奘译	3	1
@@ -76,6 +77,11 @@ def text_to_num(text):
     return t
 
 
+# 得到每次的页数
+with open(volume_file) as f:
+    pages_volume = {r[0]: len(r[5].split(',')) for r in csv.reader(f) if '_' in r[0]}
+
+
 for sutra in sutras:
     sutra[1]['code'] = sutra[1]['code'].strip()
     sutra[1]['prefix'] = re.sub(r'^\s*\d+', '', sutra[0])
@@ -112,6 +118,8 @@ for sutra in sutras:
         translators.add(r[2])
     reels = sorted(list(set(reels))) or [1]
     volumes = sorted(list(set(volumes)))
+    start_volume = 'JS_' + volumes[0]
+    end_volume = 'JS_' + volumes[-1]
 
     if len(sutra['items']) > 1:
         print('%s\t%s\t%d条\t%d卷\t%d册' % (sutra_code, sutra_name, len(sutra['items']), len(reels), len(volumes)))
@@ -126,10 +134,10 @@ for sutra in sutras:
         len(reels),  # existed_reel_count
         list(translators)[0],  # author
         '',  # trans_time
-        'JS_' + volumes[0],  # start_volume
+        start_volume,
         sutra['items'][0][4],  # start_page
-        'JS_' + volumes[-1],  # end_volume
-        sutra['items'][-1][4],  # end_page
+        end_volume,
+        int(sutra['items'][-1][4]) + pages_volume.get(end_volume, 1) - 1,  # end_page
         '',  # remark
     ])
 
