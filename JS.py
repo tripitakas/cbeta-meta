@@ -111,7 +111,7 @@ for sutra in sutras:
         volumes.append(r[3])
         translators.add(r[2])
     reels = sorted(list(set(reels))) or [1]
-    assert len(set(volumes)) == len(volumes)
+    volumes = sorted(list(set(volumes)))
 
     if len(sutra['items']) > 1:
         print('%s\t%s\t%d条\t%d卷\t%d册' % (sutra_code, sutra_name, len(sutra['items']), len(reels), len(volumes)))
