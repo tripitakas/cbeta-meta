@@ -119,7 +119,9 @@ for sutra in sutras:
     reels = sorted(list(set(reels))) or [1]
     volumes = sorted(list(set(volumes)))
     start_volume = 'JS_' + volumes[0]
-    end_volume = 'JS_' + volumes[-1]
+    end_volume, end_volume_i = 'JS_' + volumes[-1], -1
+    if end_volume not in pages_volume and len(volumes) > 1:
+        end_volume, end_volume_i = 'JS_' + volumes[-2], -2
 
     if len(sutra['items']) > 1:
         print('%s\t%s\t%d条\t%d卷\t%d册' % (sutra_code, sutra_name, len(sutra['items']), len(reels), len(volumes)))
@@ -137,7 +139,7 @@ for sutra in sutras:
         start_volume,
         sutra['items'][0][4],  # start_page
         end_volume,
-        int(sutra['items'][-1][4]) + pages_volume.get(end_volume, 1) - 1,  # end_page
+        int(sutra['items'][end_volume_i][4]) + pages_volume[end_volume] - 1 if end_volume in pages_volume else 0,  # end_page
         '',  # remark
     ])
 
