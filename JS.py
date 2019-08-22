@@ -3,6 +3,7 @@
 
 import re
 import csv
+import sys
 from os import path
 from operator import itemgetter
 
@@ -34,7 +35,10 @@ for i, r in enumerate(rows):
     last_code = r[0] = (' ' * 5 + (r[0] or last_code))[-6:]
     sutra_name = r[0] + sutra_name
     sutras[sutra_name] = sutras.get(sutra_name) or dict(code=r[0], items=[])
-    sutras[sutra_name]['items'].append(r)
+    sutras[sutra_name]['items'].append(r)  # items: 同一部经论里的条目
+
+    # 起始页转为图片页号
+    r[5] = (int(r[5]) - 1) * 2 + 1
 
 codes = set(sutra['code'] for name, sutra in sutras.items())
 
@@ -77,11 +81,6 @@ def text_to_num(text):
     return t
 
 
-# 得到每次的页数
-with open(volume_file) as f:
-    pages_volume = {r[0]: len(r[5].split(',')) for r in csv.reader(f) if '_' in r[0]}
-
-
 for sutra in sutras:
     sutra[1]['code'] = sutra[1]['code'].strip()
     sutra[1]['prefix'] = re.sub(r'^\s*\d+', '', sutra[0])
@@ -118,10 +117,9 @@ for sutra in sutras:
         translators.add(r[2])
     reels = sorted(list(set(reels))) or [1]
     volumes = sorted(list(set(volumes)))
-    start_volume = 'JS_' + volumes[0]
-    end_volume, end_volume_i = 'JS_' + volumes[-1], -1
-    if end_volume not in pages_volume and len(volumes) > 1:
-        end_volume, end_volume_i = 'JS_' + volumes[-2], -2
+    start_volume = 'JS_' + volumes[0]  # 起始册
+    end_volume = 'JS_' + volumes[-1]  # 终止册
+    start_page = sutra['items'][0][4]  # 起始页号（图片号）
 
     if len(sutra['items']) > 1:
         print('%s\t%s\t%d条\t%d卷\t%d册' % (sutra_code, sutra_name, len(sutra['items']), len(reels), len(volumes)))
@@ -137,11 +135,28 @@ for sutra in sutras:
         list(translators)[0],  # author
         '',  # trans_time
         start_volume,
-        sutra['items'][0][4],  # start_page
+        start_page,
         end_volume,
-        int(sutra['items'][end_volume_i][4]) + pages_volume[end_volume] - 1 if end_volume in pages_volume else 0,  # end_page
+        0,  # end_page
         '',  # remark
     ])
 
+# 得到每册的页数（即图片数，不是经目里的页）
+with open(volume_file) as f:
+    pages_volume = {r[0]: len(r[5].split(',')) for r in csv.reader(f) if '_' in r[0]}
+
+# 如果下一部经的start_volume与当前经的end_volume在同一册，则可直接推断（下一部经起始页的上一页即当前经的最后一页），不需要依靠Volume信息。
+# 如果下一部经在另一册的第一页或当前经是最后一册，那么当前经应该在本册的最后一页，这个时候需要用到Volume信息。
+for sutra_i, sutra in enumerate(output_sutra[1:]):
+    next_sutra = sutra_i + 2 < len(output_sutra) and output_sutra[sutra_i + 2]
+    end_volume = sutra[-3]  # 当前经的最后一册
+    if next_sutra and next_sutra[-5] == sutra[-5]:  # 在同一册
+        sutra[-2] = next_sutra[-4] - 1  # 下一部经起始页的上一页即当前经的最后一页
+    elif end_volume in pages_volume:
+        sutra[-2] = pages_volume[end_volume]  # 当前经应该在本册的最后一页
+    else:
+        sys.stderr.write('%s page not exist' % (end_volume,))
+
+# 导出Sutra-JS.csv
 with open(csv_file, 'w') as f:
     csv.writer(f).writerows(output_sutra)
